@@ -71,18 +71,19 @@ fluidPage(
                          HTML("<p> Kaggle: <a href = 'https://www.kaggle.com/datasets/missionjee/car-sales-report'>Car Sales Report</a></p>"),
                          fluidRow(
                            column(3, align = "left",
-                                  h5("The original dataset had 16 columns and 23,906 rows of observations. The data was narrowed down to 7 columns.
-                                     The data analyzes the company, model, gender, color, price, annual income, and dealer region."),
+                                  h5("The original dataset had 16 columns and 23,906 rows of observations. The data was narrowed down to 8 columns.
+                                     The data analyzes the company, model, gender, color, transmission, price, annual income, and dealer region."),
                                   p(HTML("<small>Company: The make of the car.</small>")),
                                   p(HTML("<small>Model: The model of the car.</small>")),
                                   p(HTML("<small>Gender: The gender of the buyer.</small>")),
                                   p(HTML("<small>Color: The color the buyer chose - black, pale white, or red.</small>")),
+                                  p(HTML("<small>Transmission: If automatic or manual was purchased.</small>")),
                                   p(HTML("<small>Price: The price ($) the car was sold at.</small>")),
                                   p(HTML("<small>Annual Income: The Annual Income ($) the buyer makes.</small>")),
                                   p(HTML("<small>Dealer Region: Where the car was purchased.</small>"))
                            ),
                            column(9, align = "center",
-                                  plotOutput("df_model", width = "700px", height = "600px")  # Adjust height as needed
+                                  plotOutput("df_model", width = "800px", height = "700px")  # Adjust height as needed
                            )
                          )
                )   
@@ -129,7 +130,13 @@ fluidPage(
                                              textOutput("correlation"),
                                              plotlyOutput("total_scatter")
                                            )
-                           ),              
+                           ), 
+                           # accordion_panel("Total Car Price vs Income of Consumer",
+                           #                 mainPanel(
+                           #                   width = 12,
+                           #                   plotlyOutput("total_box")
+                           #                 )
+                           #                ),
                            accordion_panel("Car Price vs Income of Consumer by Model",
                                            sidebarLayout(
                                              sidebarPanel(
@@ -221,7 +228,7 @@ fluidPage(
             mainPanel(
               width = 9,
               textOutput("selected_revenue"),
-              plotlyOutput("revenue_barplot")
+              plotOutput("revenue_barplot")
             )
           )
         ),
@@ -248,7 +255,7 @@ fluidPage(
             mainPanel(
               width = 9,
               textOutput("selected_sales"),
-              plotlyOutput("sales_barplot")
+              plotOutput("sales_barplot")
             )
           )
         ),

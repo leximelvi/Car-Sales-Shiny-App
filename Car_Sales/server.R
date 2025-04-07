@@ -198,6 +198,24 @@ function(input, output, session) {
     ggplotly(p)
   })
   
+  # total_stats <- car_sales %>%
+  #   select(Price = `Price....`, Income = `Annual.Income`) %>%
+  #   pivot_longer(cols = everything(), names_to = "Variable", values_to = "Value")
+  # 
+  # #Total Box
+  # output$total_box <- renderPlotly({
+  #   p <- ggplot(total_stats, aes(x = Variable, y = Value, fill = Variable)) +
+  #     geom_boxplot() +
+  #     labs(
+  #       title = "Distribution of Car Price and Annual Income",
+  #       x = "Variable",
+  #       y = "Value ($)"
+  #     ) +
+  #     theme_minimal() +
+  #     theme(legend.position = "none")
+  #   
+  #   ggplotly(p)
+  # })
   
   output$correlation <- renderText({
     correlation <- cor(average_stats$mean_income, average_stats$mean_price, use = "complete.obs")
@@ -397,7 +415,7 @@ function(input, output, session) {
   })
   
   #Horizontal Bar Plot
-  output$revenue_barplot <- renderPlotly({
+  output$revenue_barplot <- renderPlot({
     req(input$revenue_category)
     
     # Aggregate total revenue based on the selected category
@@ -411,9 +429,11 @@ function(input, output, session) {
       arrange(desc(Total_Revenue))
     
     # Create a horizontal bar plot
-    p <- ggplot(revenue_data, aes(x = reorder(.data[[input$revenue_category]], Total_Revenue), 
+    ggplot(revenue_data, aes(x = reorder(.data[[input$revenue_category]], Total_Revenue), 
                                   y = Total_Revenue, fill = .data[[input$revenue_category]])) +
       geom_col() +
+      geom_text(aes(label = Total_Revenue), 
+                hjust = 1.2, size = 4) +  # Positioning & size of text
       coord_flip() +  # Horizontal bars
       scale_y_continuous(labels = scales::label_number(scale = 1e-6, suffix = " mil")) +
       labs(title = "Total Revenue by Selected Category",
@@ -421,8 +441,6 @@ function(input, output, session) {
            y = "Total Revenue ($)") +
       theme_minimal() +
       theme(legend.position = "none")
-    
-    ggplotly(p)  # Convert to interactive plot
   })
   
   output$selected_sales <- renderText({
@@ -430,7 +448,7 @@ function(input, output, session) {
  })
   
   #Horizontal Bar Plot
-  output$sales_barplot <- renderPlotly({
+  output$sales_barplot <- renderPlot({
     req(input$sales_category)
     
     # Aggregate total revenue based on the selected category
@@ -444,18 +462,17 @@ function(input, output, session) {
       arrange(desc(Total_Sales))
     
     # Create a horizontal bar plot
-    p <- ggplot(sales_data, aes(x = reorder(.data[[input$sales_category]], Total_Sales), 
+    ggplot(sales_data, aes(x = reorder(.data[[input$sales_category]], Total_Sales), 
                                   y = Total_Sales, fill = .data[[input$sales_category]])) +
       geom_col() +
+      geom_text(aes(label = Total_Sales), 
+                hjust = 1.2, size = 4) +  # Positioning & size of text
       coord_flip() +  # Horizontal bars
-      scale_y_continuous(labels = scales::label_number(scale = 1e-6, suffix = " mil")) +
       labs(title = "Total Sales by Selected Category",
            x = input$sales_category,
            y = "Total Sales") +
       theme_minimal() +
       theme(legend.position = "none")
-    
-    ggplotly(p)  # Convert to interactive plot
   })
   
 }
