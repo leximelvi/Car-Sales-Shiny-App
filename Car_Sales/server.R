@@ -73,13 +73,22 @@ function(input, output, session) {
         median_price = median(Price...., na.rm = TRUE),
         upper_whisker = quantile(Price...., 0.75, na.rm = TRUE) + 1.5 * IQR(Price....),
         lower_whisker = quantile(Price...., 0.25, na.rm = TRUE) - 1.5 * IQR(Price....),
+        max_price = max(Price...., na.rm = TRUE),
+        min_price = min(Price...., na.rm = TRUE),
+        price_range = max_price - min_price,
         .groups = 'drop'
       )
   })
   
   # Boxplot 
   output$company_box <- renderPlotly({
-    p <- ggplot(company_data(), aes(x = Model, y = Price...., fill = Model)) +  # Corrected dataset
+    stats <- summary_stats()
+    
+    ordered_data <- company_data() %>%
+      left_join(stats, by = "Model") %>%
+      mutate(Model = fct_reorder(Model, price_range))
+    
+    p <- ggplot(ordered_data, aes(x = Model, y = Price...., fill = Model)) +  # Corrected dataset
       geom_boxplot() +
       labs(title = paste("Car Price Distribution of\nModels for", input$Company),
            x = "Model",
@@ -165,37 +174,59 @@ function(input, output, session) {
         axis.text.x = element_text(angle = 45, hjust = 1))
   })
   
+  
+  average_stats <- car_sales %>%
+      group_by(Company) %>%
+      summarize(
+        mean_price = mean(Price...., na.rm = TRUE),
+        mean_income = mean(Annual.Income, na.rm = TRUE),
+        .groups = 'drop'
+      ) %>%
+    mutate(Company = factor(Company, levels = sort(unique(Company)))) 
+  
+  
   # Total Scatter
-  output$total_scatter <- renderPlot({
-    ggplot(car_sales, aes(x = Annual.Income, y = Price....)) +
-      geom_point(size = 4, color = "red") +
-      labs(title = "Overall Car Price vs Annual Income",
-           x = "Annual Income",
-           y = "Price ($)") +
+  output$total_scatter <- renderPlotly({
+    p <- ggplot(average_stats, aes(x = mean_income, y = mean_price, color = Company)) +
+      geom_point(size = 4, alpha = 0.7) +
+      labs(title = "Average Car Price vs Average Annual Income",
+           x = "Average Annual Income",
+           y = "Average Price ($)",
+           fill = "Company") +
       theme_minimal()
+    
+    ggplotly(p)
   })
   
+  
+  output$correlation <- renderText({
+    correlation <- cor(average_stats$mean_income, average_stats$mean_price, use = "complete.obs")
+    paste("r =", round(correlation, 2))
+  })
+  
+  
+  
   observe({
-    updateSelectInput(session, "Company", choices = unique(car_sales$Company))
+    updateSelectInput(session, "Company", choices = sort(unique(car_sales$Company)))
     updateCheckboxGroupInput(session, "Dealer_Region", 
-                             choices = unique(car_sales$Dealer_Region),
-                             selected = unique(car_sales$Dealer_Region))
+                             choices = sort(unique(car_sales$Dealer_Region)),
+                             selected = sort(unique(car_sales$Dealer_Region)))
   })
   
   observe({
-    updateSelectInput(session, "Company1", choices = unique(car_sales$Company))
+    updateSelectInput(session, "Company1", choices = sort(unique(car_sales$Company)))
     updateCheckboxGroupInput(session, "Dealer_Region1", 
-                             choices = unique(car_sales$Dealer_Region),
-                             selected = unique(car_sales$Dealer_Region))
+                             choices = sort(unique(car_sales$Dealer_Region)),
+                             selected = sort(unique(car_sales$Dealer_Region)))
   })
   
   observeEvent(input$Company, {
-    filtered_models <- unique(car_sales$Model[car_sales$Company == input$Company])
+    filtered_models <- sort(unique(car_sales$Model[car_sales$Company == input$Company]))
     updateSelectInput(session, "Model", choices = filtered_models)
   })
   
   observeEvent(input$Company1, {
-    filtered_models <- unique(car_sales$Model[car_sales$Company == input$Company1])
+    filtered_models <- sort(unique(car_sales$Model[car_sales$Company == input$Company1]))
     updateSelectInput(session, "Model1", choices = filtered_models)
   })
   
@@ -236,24 +267,6 @@ function(input, output, session) {
     }
   })
   
-  # Scatter Plot
-  output$model_scatter <- renderPlot({
-    req(input$Company, input$Model, input$Dealer_Region)
-    
-    filtered_data <- car_sales %>%
-      filter(Company == input$Company & 
-               Model == input$Model &
-               Dealer_Region %in% input$Dealer_Region)
-    
-    ggplot(filtered_data, aes(x = Annual.Income, y = Price...., color = Dealer_Region)) +
-      geom_point(alpha = 0.6, size = 3) +  # Add scatter points
-      labs(title = "Car Price vs. Annual Income",
-           x = "Annual Income ($)",
-           y = "Car Price ($)",
-           color = "Dealer Region") +
-      theme_minimal() +
-      theme(plot.title = element_text(hjust = 0.5))  # Center the title
-  })
   
   
   
@@ -298,6 +311,7 @@ function(input, output, session) {
     
     p <- ggplot(filtered_data, aes(x = Annual.Income)) + 
       geom_density(aes(fill = Dealer_Region), position = "dodge", alpha = 0.7) + 
+      scale_x_continuous(labels = scales::label_number(scale = 1e-6, suffix = " mil")) +
       labs(title = "Annual Income Distribution",
            x = "Annual Income ($)",
            y = "Number of People",
@@ -401,6 +415,7 @@ function(input, output, session) {
                                   y = Total_Revenue, fill = .data[[input$revenue_category]])) +
       geom_col() +
       coord_flip() +  # Horizontal bars
+      scale_y_continuous(labels = scales::label_number(scale = 1e-6, suffix = " mil")) +
       labs(title = "Total Revenue by Selected Category",
            x = input$revenue_category,
            y = "Total Revenue ($)") +
@@ -433,6 +448,7 @@ function(input, output, session) {
                                   y = Total_Sales, fill = .data[[input$sales_category]])) +
       geom_col() +
       coord_flip() +  # Horizontal bars
+      scale_y_continuous(labels = scales::label_number(scale = 1e-6, suffix = " mil")) +
       labs(title = "Total Sales by Selected Category",
            x = input$sales_category,
            y = "Total Sales") +

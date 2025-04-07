@@ -123,10 +123,11 @@ fluidPage(
                nav_panel("Car Price vs Income of Consumer",
                          p("Car Price vs Income of Consumer"),
                          accordion(
-                           accordion_panel("Overall Car Price vs Income of Consumer",
+                           accordion_panel("Average Car Price vs Average Income of Consumer",
                                            mainPanel(
                                              width = 12,
-                                             plotOutput("total_scatter")
+                                             textOutput("correlation"),
+                                             plotlyOutput("total_scatter")
                                            )
                            ),              
                            accordion_panel("Car Price vs Income of Consumer by Model",
@@ -136,8 +137,8 @@ fluidPage(
                                                width = 3,
                                                selectInput(inputId = "Company",
                                                            label = "Select a Company:",
-                                                           choices = unique(car_sales$Company),
-                                                           selected = unique(car_sales$Company)[1]),
+                                                           choices = sort(unique(car_sales$Company)),
+                                                           selected = sort(unique(car_sales$Company))[1]),
                                                selectInput(inputId = "Model",
                                                            label = "Select a Model:",
                                                            choices = NULL),
@@ -150,121 +151,115 @@ fluidPage(
                                                width = 9,
                                                textOutput("selected_model"),
                                                textOutput("body_style_text"),
-                                               accordion(
-                                                 accordion_panel("Scatter Plot for Car Price vs. Annual Income",
-                                                                 plotOutput("model_scatter")
-                                                 ),
-                                                 accordion_panel("Density Plot for Car Price vs. Annual Income",
-                                                                 width = 9,
-                                                                 fluidRow(
-                                                                   column(6, plotlyOutput("price_bar")),  # Car Price Bar Graph
-                                                                   column(6, plotlyOutput("income_bar"))  # Annual Income Bar Graph
-                                                                 )
-                                                 )
+                                               fluidRow(
+                                                 column(6, plotlyOutput("price_bar")),  # Car Price Bar Graph
+                                                 column(6, plotlyOutput("income_bar"))  # Annual Income Bar Graph
                                                )
-                                               )
+                                               
+                                               
                                              )
-                                           ),
-                           )
-                         )   
-               ),
-               
-               
-               nav_panel(
-                 "Buyer Preferences",
-                 p("Sankey Plot of Buyer Preferences"),
-                 p("The diagram shows the type of transmission and color chosen 
-          based on gender and dealer region for each make and model."),
-                 sidebarLayout(
-                   sidebarPanel(
-                     id = "sidebar1",
-                     width = 3,
-                     selectInput(inputId = "Company1",
-                                 label = "Select a Company:",
-                                 choices = unique(car_sales$Company),
-                                 selected = unique(car_sales$Company)[1]),
-                     selectInput(inputId = "Model1",
-                                 label = "Select a Model:",
-                                 choices = NULL),
-                     checkboxGroupInput(inputId = "Dealer_Region1",
-                                        label = "Select Dealer Regions:",
-                                        choices = unique(car_sales$Dealer_Region),
-                                        selected = unique(car_sales$Dealer_Region))
-                   ),
-                   
-                   mainPanel(
-                     width = 9,
-                     textOutput("selected_model1"),
-                     textOutput("body_style_text1"),
-                     plotlyOutput("model_sankey")
-                   )
-                 )
-               ),
-               
-               nav_menu(
-                 "Totals",
-                 nav_panel(
-                   "Total Revenue",
-                   p("What's Bringing in the Most Revenue?"),
-                   p("The horizontal bar plot shows how much revenue each category is bringing in."),
-                   sidebarLayout(
-                     sidebarPanel(
-                       id = "sidebar2",
-                       width = 3,
-                       selectInput(inputId = "revenue_category", 
-                                   label = "Select Category:", 
-                                   choices = c("Dealer Region" = "Dealer_Region",
-                                               "Annual Income" = "Income_Bins",
-                                               "Company" = "Company", 
-                                               "Color" = "Color", 
-                                               "Transmission" = "Transmission", 
-                                               "Gender" = "Gender", 
-                                               "Body Style" = "Body.Style"),
-                                   selected = "Dealer_Region")
-                     ),
-                     
-                     mainPanel(
-                       width = 9,
-                       textOutput("selected_revenue"),
-                       plotlyOutput("revenue_barplot")
-                     )
-                   )
-                 ),
-                 nav_panel(
-                   "Total Sales",
-                   p("What's Bringing in the Most Sales?"),
-                   p("The horizontal bar plot shows how many sales each category has had."),
-                   sidebarLayout(
-                     sidebarPanel(
-                       id = "sidebar2",
-                       width = 3,
-                       selectInput(inputId = "sales_category", 
-                                   label = "Select Category:", 
-                                   choices = c("Dealer Region" = "Dealer_Region",
-                                               "Annual Income" = "Income_Bins",
-                                               "Company" = "Company", 
-                                               "Color" = "Color", 
-                                               "Transmission" = "Transmission", 
-                                               "Gender" = "Gender", 
-                                               "Body Style" = "Body.Style"),
-                                   selected = "Dealer_Region")
-                     ),
-                     
-                     mainPanel(
-                       width = 9,
-                       textOutput("selected_sales"),
-                       plotlyOutput("sales_barplot")
-                     )
-                   )
-                 ),
-               ),
-               
-               id = "tab"  # Add id for navigation
+                                           )
+                           ),
+                         )
+               )   
       ),
       
-      mainPanel(
-      )
+      
+      nav_panel(
+        "Buyer Preferences",
+        p("Sankey Plot of Buyer Preferences"),
+        p("The diagram shows the type of transmission and color chosen 
+          based on gender and dealer region for each make and model."),
+        sidebarLayout(
+          sidebarPanel(
+            id = "sidebar1",
+            width = 3,
+            selectInput(inputId = "Company1",
+                        label = "Select a Company:",
+                        choices = unique(car_sales$Company),
+                        selected = unique(car_sales$Company)[1]),
+            selectInput(inputId = "Model1",
+                        label = "Select a Model:",
+                        choices = NULL),
+            checkboxGroupInput(inputId = "Dealer_Region1",
+                               label = "Select Dealer Regions:",
+                               choices = unique(car_sales$Dealer_Region),
+                               selected = unique(car_sales$Dealer_Region))
+          ),
+          
+          mainPanel(
+            width = 9,
+            textOutput("selected_model1"),
+            textOutput("body_style_text1"),
+            plotlyOutput("model_sankey")
+          )
+        )
+      ),
+      
+      nav_menu(
+        "Totals",
+        nav_panel(
+          "Total Revenue",
+          p("What's Bringing in the Most Revenue?"),
+          p("The horizontal bar plot shows how much revenue each category is bringing in."),
+          sidebarLayout(
+            sidebarPanel(
+              id = "sidebar2",
+              width = 3,
+              selectInput(inputId = "revenue_category", 
+                          label = "Select Category:", 
+                          choices = c("Dealer Region" = "Dealer_Region",
+                                      "Annual Income" = "Income_Bins",
+                                      "Company" = "Company", 
+                                      "Color" = "Color", 
+                                      "Transmission" = "Transmission", 
+                                      "Gender" = "Gender", 
+                                      "Body Style" = "Body.Style"),
+                          selected = "Dealer_Region")
+            ),
+            
+            mainPanel(
+              width = 9,
+              textOutput("selected_revenue"),
+              plotlyOutput("revenue_barplot")
+            )
+          )
+        ),
+        nav_panel(
+          "Total Sales",
+          p("What's Bringing in the Most Sales?"),
+          p("The horizontal bar plot shows how many sales each category has had."),
+          sidebarLayout(
+            sidebarPanel(
+              id = "sidebar2",
+              width = 3,
+              selectInput(inputId = "sales_category", 
+                          label = "Select Category:", 
+                          choices = c("Dealer Region" = "Dealer_Region",
+                                      "Annual Income" = "Income_Bins",
+                                      "Company" = "Company", 
+                                      "Color" = "Color", 
+                                      "Transmission" = "Transmission", 
+                                      "Gender" = "Gender", 
+                                      "Body Style" = "Body.Style"),
+                          selected = "Dealer_Region")
+            ),
+            
+            mainPanel(
+              width = 9,
+              textOutput("selected_sales"),
+              plotlyOutput("sales_barplot")
+            )
+          )
+        ),
+      ),
+      
+      id = "tab"  # Add id for navigation
+    ),
+    
+    mainPanel(
     )
+  )
 )
 
 
