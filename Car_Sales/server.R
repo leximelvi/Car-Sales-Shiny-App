@@ -243,10 +243,40 @@ function(input, output, session) {
     updateSelectInput(session, "Model", choices = filtered_models)
   })
   
+  
   observeEvent(input$Company1, {
     filtered_models <- sort(unique(car_sales$Model[car_sales$Company == input$Company1]))
     updateSelectInput(session, "Model1", choices = filtered_models)
   })
+  
+  observeEvent(input$Model, {
+    req(input$Company)
+    
+    available_styles <- car_sales %>%
+      filter(Company == input$Company, Model == input$Model) %>%
+      pull(Body.Style) %>%
+      unique() %>%
+      sort()
+    
+    updateCheckboxGroupInput(session, "Body.Style", 
+                             choices = available_styles,
+                             selected = available_styles)
+  })
+  
+  observeEvent(input$Model1, {
+    req(input$Company1)
+    
+    available_styles <- car_sales %>%
+      filter(Company == input$Company1, Model == input$Model1) %>%
+      pull(Body.Style) %>%
+      unique() %>%
+      sort()
+    
+    updateCheckboxGroupInput(session, "Body.Style1", 
+                             choices = available_styles,
+                             selected = available_styles)
+  })
+  
   
   # Show selected values
   output$selected_model <- renderText({
@@ -295,13 +325,14 @@ function(input, output, session) {
     filtered_data <- car_sales %>%
       filter(Company == input$Company & 
                Model == input$Model &
+               Body.Style %in% input$Body.Style &
                Dealer_Region %in% input$Dealer_Region)
     
     p <- ggplot(filtered_data, aes(x = Price....)) + 
       geom_density(aes(fill = Dealer_Region), position = "dodge", alpha = 0.7) + 
       labs(title = "Car Price Distribution",
            x = "Price ($)",
-           y = "Number of Cars",
+           y = "Density of Cars",
            fill = "Dealer Region") +
       theme_minimal() +
       theme(
@@ -325,14 +356,15 @@ function(input, output, session) {
     filtered_data <- car_sales %>%
       filter(Company == input$Company & 
                Model == input$Model &
+               Body.Style %in% input$Body.Style &
                Dealer_Region %in% input$Dealer_Region)
     
-    p <- ggplot(filtered_data, aes(x = Annual.Income)) + 
+    p <- ggplot(filtered_data, aes(x = Annual.Income, fill = Dealer_Region)) +
       geom_density(aes(fill = Dealer_Region), position = "dodge", alpha = 0.7) + 
       scale_x_continuous(labels = scales::label_number(scale = 1e-6, suffix = " mil")) +
       labs(title = "Annual Income Distribution",
            x = "Annual Income ($)",
-           y = "Number of People",
+           y = "Density of People",
            fill = "Dealer Region") +
       theme_minimal() +
       theme(
@@ -352,12 +384,13 @@ function(input, output, session) {
   
   # Sankey Plot
   output$model_sankey <- renderPlotly({
-    req(input$Company1, input$Model1, input$Dealer_Region1)
+    req(input$Company1, input$Model1, input$Body.Style1, input$Dealer_Region1)
     
     # Filter the data based on inputs
     filtered_data <- car_sales %>%
       filter(Company == input$Company1 & 
                Model == input$Model1 &
+               Body.Style %in% input$Body.Style1 &
                Dealer_Region %in% input$Dealer_Region1)
     
     # Create sankey data where flows are grouped by Dealer Region, Gender, Transmission, and Color
